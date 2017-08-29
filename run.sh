@@ -255,7 +255,7 @@ check_themes() {
     done
   fi
 
-  [[ "${#to_install}" -gt 0 ]] && wp theme install --allow-root "${to_install[@]}" | tail -n 1 |& _colorize
+  [[ "${#to_install}" -gt 0 ]] && wp theme install --allow-root "${to_install[@]}"
 
   for theme in $(wp theme list --field=name --status=inactive --allow-root); do
     [[ ${theme_deps[$theme]} ]] && continue
