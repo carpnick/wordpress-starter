@@ -236,7 +236,7 @@ check_plugins() {
     to_remove+=( "$plugin" )
   done
 
-  [[ "${#to_install}" -gt 0 ]] && wp plugin install --allow-root "${to_install[@]}" | tail -n 1 |& _colorize
+  [[ "${#to_install}" -gt 0 ]] && wp plugin install --allow-root "${to_install[@]}"
   [[ "${#to_remove}" -gt 0 ]] && _wp plugin delete "${to_remove[@]}"
   _wp plugin activate --all
 }
