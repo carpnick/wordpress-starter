@@ -97,12 +97,11 @@ _colorize() {
   done
 }
 
-_log_last_exit_colorize(){
-
-  if [$? -eq 0]; then
-    echo $1 |& _colorize
+_log_last_exit_colorize() {
+  if [ $? -eq 0 ]; then
+    echo "$1" |& _colorize
   else
-    echo $2  |& _colorize
+    echo "$2" |& _colorize
     exit 1
   fi  
 }
