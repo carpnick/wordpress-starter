@@ -330,7 +330,7 @@ main() {
     _log_last_exit_colorize "Success: rewrite structure" "Error: rewrite structure failed!"
 
     _wp rewrite flush --hard
-    _log_last_exit_colorize "Success: rrewrite flush" "Error: rewrite flush failed!"
+    _log_last_exit_colorize "Success: rewrite flush" "Error: rewrite flush failed!"
   fi
 
   chown -R www-data /app /var/www/html
