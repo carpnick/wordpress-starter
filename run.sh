@@ -186,7 +186,7 @@ init() {
   # ------------------
   if [[ ! -f /app/wp-settings.php ]]; then
     h2 "Downloading WordPress"
-    _wp core download --version="$WP_VERSION" && { echo "Wordpress downloaded successfully"; } || { echo "Wordpress download Error!"; exit 1; }
+    _wp core download --version="$WP_VERSION" && { echo "Success: Wordpress downloaded" |& _colorize; } || { echo "Error: Wordpress download!" |& _colorize; exit 1; }
   fi
 
   chown -R www-data /app/wp-content
@@ -198,16 +198,16 @@ check_database() {
   # Already installed
   wp core is-installed --allow-root 2>/dev/null && return
 
-  _wp db create && { echo "Database created successfully"; } || { echo "Database create Error!"; exit 1; }
+  _wp db create && { echo "Success: db create" |& _colorize; } || { echo "Error: db create!" |& _colorize; exit 1; }
 
   # No backups found
   if [[ "$( find /data -name "*.sql" 2>/dev/null | wc -l )" -eq 0 ]]; then
-    _wp core install && { echo "WP core installed successfully"; } || { echo "WP Core install Error!"; exit 1; }
+    _wp core install && { echo "Success: core install" |& _colorize; } || { echo "Error: core install!" |& _colorize; exit 1; }
     return
   fi
 
   data_path=$( find /data -name "*.sql" -print -quit )
-  _wp db import "$data_path" && { echo "WP DB import successfully"; } || { echo "WP DB import Error!"; exit 1; }
+  _wp db import "$data_path" && { echo "Success: db import" |& _colorize; } || { echo "Error: db import!" |& _colorize; exit 1; }
 
   if [[ -n "$URL_REPLACE" ]]; then
     wp search-replace --skip-columns=guid "$BEFORE_URL" "$AFTER_URL" --allow-root \
@@ -237,11 +237,11 @@ check_plugins() {
   done
 
   for key in "${to_install[@]}"; do
-    wp plugin install --allow-root "$key" && { echo "$key plugin installed successfully"; } || { echo "$key plugin install Error!"; exit 1; }
+    wp plugin install --allow-root "$key" && { echo "Success: $key plugin installed" |& _colorize; } || { echo "Error: $key plugin failure!" |& _colorize; exit 1; }
   done  
 
   [[ "${#to_remove}" -gt 0 ]] && _wp plugin delete "${to_remove[@]}"
-  _wp plugin activate --all && { echo "WP plugin activated successfully"; } || { echo "WP Activate plugin Error!"; exit 1; }
+  _wp plugin activate --all && { echo "Success: plugin activate all" |& _colorize; } || { echo "Error: plugin activate all!" |& _colorize; exit 1; }
 }
 
 check_themes() {
@@ -259,7 +259,7 @@ check_themes() {
   fi
 
   for key in "${to_install[@]}"; do
-    wp theme install --allow-root "$key" && { echo "$key theme installed successfully"; } || { echo "$key theme install Error!"; exit 1; }
+    wp theme install --allow-root "$key" && { echo "Success: $key theme install " |& _colorize; } || { echo "Error: $key theme install!" |& _colorize; exit 1; }
   done 
 
   for theme in $(wp theme list --field=name --status=inactive --allow-root); do
@@ -269,7 +269,7 @@ check_themes() {
   done
 
   for key in "${to_remove[@]}"; do
-    wp theme delete --allow-root "$key" && { echo "$key theme deleted successfully"; } || { echo "$key theme delete Error!"; exit 1; }
+    wp theme delete --allow-root "$key" && { echo "Success: $key theme delete" |& _colorize; } || { echo "Error: Wordpress download!" |& _colorize; exit 1; }
   done
 
 }
@@ -287,7 +287,7 @@ main() {
 
   h2 "Configuring WordPress"
   rm -f /app/wp-config.php
-  _wp core config && { echo "WP core config successfully"; } || { echo "WP Core config Error!"; exit 1; }
+  _wp core config && { echo "Success: core config" |& _colorize; } || { echo "Error: core config!" |& _colorize; exit 1; }
 
   h2 "Checking database"
   check_database
