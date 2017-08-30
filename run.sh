@@ -125,7 +125,7 @@ _get_volumes() {
 }
 
 _wp() {
-  wp --allow-root "$@" |& _colorize
+  wp --allow-root "$@" 
 }
 
 # FIXME: Remove in next version
