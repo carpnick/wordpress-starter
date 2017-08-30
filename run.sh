@@ -237,7 +237,7 @@ check_plugins() {
   done
 
   for key in "${to_install[@]}"; do
-    wp plugin install --allow-root "$key" |& _colorize && { echo "$key plugin installed successfully"; } || { echo "$key plugin install Error!"; exit 1; }
+    wp plugin install --allow-root "$key" && { echo "$key plugin installed successfully"; } || { echo "$key plugin install Error!"; exit 1; }
   done  
 
   [[ "${#to_remove}" -gt 0 ]] && _wp plugin delete "${to_remove[@]}"
@@ -259,7 +259,7 @@ check_themes() {
   fi
 
   for key in "${to_install[@]}"; do
-    wp theme install --allow-root "$key" |& _colorize && { echo "$key theme installed successfully"; } || { echo "$key theme install Error!"; exit 1; }
+    wp theme install --allow-root "$key" && { echo "$key theme installed successfully"; } || { echo "$key theme install Error!"; exit 1; }
   done 
 
   for theme in $(wp theme list --field=name --status=inactive --allow-root); do
@@ -269,7 +269,7 @@ check_themes() {
   done
 
   for key in "${to_remove[@]}"; do
-    wp theme delete --allow-root "$key" |& _colorize && { echo "$key theme deleted successfully"; } || { echo "$key theme delete Error!"; exit 1; }
+    wp theme delete --allow-root "$key" && { echo "$key theme deleted successfully"; } || { echo "$key theme delete Error!"; exit 1; }
   done
 
 }
