@@ -186,7 +186,7 @@ init() {
   # ------------------
   if [[ ! -f /app/wp-settings.php ]]; then
     h2 "Downloading WordPress"
-    _wp core download --version="$WP_VERSION"
+    _wp core download --version="$WP_VERSION" && { echo "Wordpress downloaded successfully"; } || { echo "Wordpress download Error!"; exit 1; }
   fi
 
   chown -R www-data /app/wp-content
@@ -198,16 +198,16 @@ check_database() {
   # Already installed
   wp core is-installed --allow-root 2>/dev/null && return
 
-  _wp db create
+  _wp db create && { echo "Database created successfully"; } || { echo "Database create Error!"; exit 1; }
 
   # No backups found
   if [[ "$( find /data -name "*.sql" 2>/dev/null | wc -l )" -eq 0 ]]; then
-    _wp core install
+    _wp core install && { echo "WP core installed successfully"; } || { echo "WP Core install Error!"; exit 1; }
     return
   fi
 
   data_path=$( find /data -name "*.sql" -print -quit )
-  _wp db import "$data_path"
+  _wp db import "$data_path" && { echo "WP DB import successfully"; } || { echo "WP DB import Error!"; exit 1; }
 
   if [[ -n "$URL_REPLACE" ]]; then
     wp search-replace --skip-columns=guid "$BEFORE_URL" "$AFTER_URL" --allow-root \
@@ -237,11 +237,11 @@ check_plugins() {
   done
 
   for key in "${to_install[@]}"; do
-    wp plugin install --allow-root "$key" && { echo "$key installed successfully" |& _colorize;  } || { echo "$key plugin install Error!" 1>&2 |& _colorize;  }
+    wp plugin install --allow-root "$key" |& _colorize && { echo "$key plugin installed successfully"; } || { echo "$key plugin install Error!"; exit 1; }
   done  
 
   [[ "${#to_remove}" -gt 0 ]] && _wp plugin delete "${to_remove[@]}"
-  _wp plugin activate --all
+  _wp plugin activate --all && { echo "WP plugin activated successfully"; } || { echo "WP Activate plugin Error!"; exit 1; }
 }
 
 check_themes() {
@@ -258,7 +258,9 @@ check_themes() {
     done
   fi
 
-  [[ "${#to_install}" -gt 0 ]] && wp theme install --allow-root "${to_install[@]}"
+  for key in "${to_install[@]}"; do
+    wp theme install --allow-root "$key" |& _colorize && { echo "$key theme installed successfully"; } || { echo "$key theme install Error!"; exit 1; }
+  done 
 
   for theme in $(wp theme list --field=name --status=inactive --allow-root); do
     [[ ${theme_deps[$theme]} ]] && continue
@@ -266,7 +268,10 @@ check_themes() {
     to_remove+=( "$theme" )
   done
 
-  [[ "${#to_remove}" -gt 0 ]] && _wp theme delete "${to_remove[@]}"
+  for key in "${to_remove[@]}"; do
+    wp theme delete --allow-root "$key" |& _colorize && { echo "$key theme deleted successfully"; } || { echo "$key theme delete Error!"; exit 1; }
+  done
+
 }
 
 main() {
@@ -282,7 +287,7 @@ main() {
 
   h2 "Configuring WordPress"
   rm -f /app/wp-config.php
-  _wp core config
+  _wp core config && { echo "WP core config successfully"; } || { echo "WP Core config Error!"; exit 1; }
 
   h2 "Checking database"
   check_database
