@@ -237,7 +237,7 @@ check_plugins() {
   done
 
   for key in "${!to_install[@]}"; do
-    wp plugin install --allow-root "$key" && { echo "$key installed successfully" &| _colorize;  } || (echo "$key plugin install Error!" 1>&2 &| _colorize; exit 1 )
+    wp plugin install --allow-root "$key" && { echo "$key installed successfully" &| _colorize;  } || { echo "$key plugin install Error!" 1>&2 &| _colorize; exit 1; }
   done
 
   [[ "${#to_remove}" -gt 0 ]] && _wp plugin delete "${to_remove[@]}"
