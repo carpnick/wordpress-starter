@@ -83,6 +83,7 @@ h2() {
   echo -e "${ORANGE}${BOLD}==>${NC}${BOLD} $*${NC}"
 }
 
+
 _colorize() {
   local IN
   local success="${GREEN}${BOLD}Success:${NC}"
@@ -94,6 +95,16 @@ _colorize() {
     IN="${IN/Warning\:/$warning}"
     echo -e "$IN"
   done
+}
+
+_log_last_exit_colorize(){
+
+  if [$? -eq 0]; then
+    echo $1 |& _colorize
+  else
+    echo $2  |& _colorize
+    exit 1
+  fi  
 }
 
 _get_volumes() {
@@ -186,7 +197,8 @@ init() {
   # ------------------
   if [[ ! -f /app/wp-settings.php ]]; then
     h2 "Downloading WordPress"
-    _wp core download --version="$WP_VERSION" && { echo "Success: Wordpress downloaded" |& _colorize; } || { echo "Error: Wordpress download!" |& _colorize; exit 1; }
+    _wp core download --version="$WP_VERSION"
+    _log_last_exit_colorize "Success: Wordpress downloaded" "Error: Wordpress download failed!"
   fi
 
   chown -R www-data /app/wp-content
@@ -198,16 +210,20 @@ check_database() {
   # Already installed
   wp core is-installed --allow-root 2>/dev/null && return
 
-  _wp db create && { echo "Success: db create" |& _colorize; } || { echo "Error: db create!" |& _colorize; exit 1; }
+  _wp db create
+  _log_last_exit_colorize "Success: db create" "Error: db create failed!"
 
   # No backups found
   if [[ "$( find /data -name "*.sql" 2>/dev/null | wc -l )" -eq 0 ]]; then
-    _wp core install && { echo "Success: core install" |& _colorize; } || { echo "Error: core install!" |& _colorize; exit 1; }
+    _wp core install 
+    _log_last_exit_colorize "Success: core install" "Error: core install failed!"
+
     return
   fi
 
   data_path=$( find /data -name "*.sql" -print -quit )
-  _wp db import "$data_path" && { echo "Success: db import" |& _colorize; } || { echo "Error: db import!" |& _colorize; exit 1; }
+  _wp db import "$data_path" 
+  _log_last_exit_colorize "Success: db import" "Error: db import failed!"
 
   if [[ -n "$URL_REPLACE" ]]; then
     wp search-replace --skip-columns=guid "$BEFORE_URL" "$AFTER_URL" --allow-root \
@@ -237,12 +253,14 @@ check_plugins() {
   done
 
   for key in "${to_install[@]}"; do
-    wp plugin install --allow-root "$key" && { echo "Success: $key plugin installed" |& _colorize; } || { echo "Error: $key plugin failure!" |& _colorize; exit 1; }
+    wp plugin install --allow-root "$key"
+    _log_last_exit_colorize "Success: $key plugin installed" "Error: $key plugin install failure!"
   done  
 
   [[ "${#to_remove}" -gt 0 ]] && _wp plugin delete "${to_remove[@]}"
-  _wp plugin activate --all && { echo "Success: plugin activate all" |& _colorize; } || { echo "Error: plugin activate all!" |& _colorize; exit 1; }
-}
+  _wp plugin activate --all 
+  _log_last_exit_colorize "Success: plugin activate all" "Error: plugin activate all failed!"
+ }
 
 check_themes() {
   local key
@@ -259,7 +277,8 @@ check_themes() {
   fi
 
   for key in "${to_install[@]}"; do
-    wp theme install --allow-root "$key" && { echo "Success: $key theme install " |& _colorize; } || { echo "Error: $key theme install!" |& _colorize; exit 1; }
+    wp theme install --allow-root "$key" 
+    _log_last_exit_colorize "Success: $key theme install " "Error: $key theme install failed!"
   done 
 
   for theme in $(wp theme list --field=name --status=inactive --allow-root); do
@@ -269,7 +288,8 @@ check_themes() {
   done
 
   for key in "${to_remove[@]}"; do
-    wp theme delete --allow-root "$key" && { echo "Success: $key theme delete" |& _colorize; } || { echo "Error: Wordpress download!" |& _colorize; exit 1; }
+    wp theme delete --allow-root "$key" 
+    _log_last_exit_colorize "Success: $key theme deleted" "Error: $key theme delete failed!"
   done
 
 }
@@ -287,7 +307,8 @@ main() {
 
   h2 "Configuring WordPress"
   rm -f /app/wp-config.php
-  _wp core config && { echo "Success: core config" |& _colorize; } || { echo "Error: core config!" |& _colorize; exit 1; }
+  _wp core config 
+  _log_last_exit_colorize "Success: core config" "Error: core config failed!"
 
   h2 "Checking database"
   check_database
@@ -295,6 +316,7 @@ main() {
   if [[ "$MULTISITE" == "true" ]]; then
     h2 "Enabling Multisite"
     _wp core multisite-convert
+    _log_last_exit_colorize "Success: core multisite-convert" "Error: core multisite-convert failed!"
   fi
 
   h2 "Checking themes"
@@ -306,7 +328,10 @@ main() {
   h2 "Finalizing"
   if [[ "$MULTISITE" != 'true' ]]; then
     _wp rewrite structure "$PERMALINKS"
+    _log_last_exit_colorize "Success: rewrite structure" "Error: rewrite structure failed!"
+
     _wp rewrite flush --hard
+    _log_last_exit_colorize "Success: rrewrite flush" "Error: rewrite flush failed!"
   fi
 
   chown -R www-data /app /var/www/html
