@@ -1,6 +1,9 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+#Error detection
+set -e
+
 # Environment
 # ------------
 ADMIN_EMAIL=${ADMIN_EMAIL:-"admin@${DB_NAME:-wordpress}.com"}
